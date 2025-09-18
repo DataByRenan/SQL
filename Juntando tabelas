@@ -1,0 +1,45 @@
+-- CREATE SCHEMA IF NOT EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi`;
+
+-- CREATE TABLE `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi` AS
+
+SELECT 
+a.id, 
+DATETIME(a.created_at, "America/Sao_Paulo") AS created_at_brasilia, -- Converter fuso horário para -3
+a.customer_name,
+a.customer_email,
+ROUND(a.amount, 2) AS amount, -- Limitar a 2 casas decimais
+CASE
+    WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card' 
+    THEN CAST(0.90 AS FLOAT64)  -- desconto de R$0,90
+    WHEN b.charges_status = 'failed' AND b.charges_payment_method = 'credit_card'
+    THEN CAST(0.30 AS FLOAT64)  -- desconto de R$0,30
+    ELSE 0 -- caso não se encaixe em nenhuma condição
+END AS cost,
+b.charges_last_transaction_installments AS installments,
+b.charges_payment_method AS payment_method,
+b.charges_status AS status
+
+
+FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders` a -- Pagarme 2.0 Yampi 
+
+JOIN `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders_charges` b -- Pagarme 2.0 Yampi 
+
+ON a.id = b.order_id
+
+
+UNION ALL
+
+SELECT
+CAST(id AS STRING), -- Converter o id para uma string
+DATETIME(date_created, "America/Sao_Paulo") AS date_created_brasilia, -- Converter fuso horário para -3   OK
+customer_name,
+customer_email,
+(paid_amount/100) AS amount, -- Dividir por 100
+cost,
+installments,
+payment_method,
+status
+FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_customers_legacy`  -- Pagarme Legacy Yampi  
+
+
+LIMIT 500;
