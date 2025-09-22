@@ -1,3 +1,12 @@
+-- ===========================================
+-- Título: Juntar dados da V1 e V5 da Pagarme 
+-- Autor: Renan Serra
+-- Descrição: Query para calcular juntar dados das diferentes versões da API da Pagarme
+-- Nota: Nomes de banco e tabelas foram anonimizados para segurança
+-- Plataforma: BigQuery
+-- Data: 22/09/2025
+-- ===========================================
+
 -- CREATE SCHEMA IF NOT EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi`;
 
 -- CREATE TABLE `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi` AS
