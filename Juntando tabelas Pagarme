@@ -8,90 +8,107 @@
 -- ===========================================
 
 -- CREATE SCHEMA IF NOT EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi`;
-
+-- DROP TABLE IF EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi`;
 -- CREATE TABLE `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi` AS
 
--- CREATE SCHEMA IF NOT EXISTS `SCHEMA_TRATADO`;
--- DROP TABLE IF EXISTS `SCHEMA_TRATADO.PAGARME_YAMPI`;
--- CREATE TABLE `SCHEMA_TRATADO.PAGARME_YAMPI` AS
+WITH fee AS 
 
-WITH fee AS (
-    SELECT 1 AS installments, 0.0312 AS percentage
-    UNION ALL SELECT 2, 0.0554
-    UNION ALL SELECT 3, 0.0670
-    UNION ALL SELECT 4, 0.0786
-    UNION ALL SELECT 5, 0.0902
-    UNION ALL SELECT 6, 0.1018
-    UNION ALL SELECT 7, 0.1152
-    UNION ALL SELECT 8, 0.1268
-    UNION ALL SELECT 9, 0.1384
-    UNION ALL SELECT 10, 0.1500
-    UNION ALL SELECT 11, 0.1616
-    UNION ALL SELECT 12, 0.1732
+( SELECT 1 AS installments, 0.0312 AS percentage
+  UNION ALL SELECT 2, 0.0554
+  UNION ALL SELECT 3, 0.0670
+  UNION ALL SELECT 4, 0.0786
+  UNION ALL SELECT 5, 0.0902
+  UNION ALL SELECT 6, 0.1018
+  UNION ALL SELECT 7, 0.1152
+  UNION ALL SELECT 8, 0.1268
+  UNION ALL SELECT 9, 0.1384
+  UNION ALL SELECT 10, 0.1500
+  UNION ALL SELECT 11, 0.1616
+  UNION ALL SELECT 12, 0.1732
 ) -- Taxa do cartão de crédito
 
+
 SELECT 
-    CAST(a.id AS STRING) AS id, 
-    DATETIME(a.created_at, "America/Sao_Paulo") AS created_at_brasilia,
-    a.customer_name,
-    a.customer_email,
-    ROUND(b.charges_amount, 2) AS charges_amount,
-    CASE
-        WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card' 
-            THEN CAST(0.90 AS FLOAT64)
-        WHEN b.charges_status = 'failed' AND b.charges_payment_method = 'credit_card'
-            THEN CAST(0.30 AS FLOAT64)
-        ELSE 0
-    END AS cost,
-    CASE
-        WHEN b.charges_payment_method = 'credit_card' AND b.charges_status = 'paid' 
-            THEN ROUND(b.charges_amount * f.percentage, 2)
-        WHEN b.charges_payment_method = 'pix' AND b.charges_status = 'paid'
-            THEN CAST(ROUND(b.charges_amount * 0.0092, 2) AS FLOAT64)
-        ELSE 0
-    END AS processing_fee,
-    CASE
-        WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card'
-            THEN ROUND(b.charges_amount - (b.charges_amount * f.percentage + 0.90), 2)
-        WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'pix'
-            THEN ROUND(b.charges_amount - b.charges_amount * 0.0092, 2)
-        ELSE 0
-    END AS net_amount,
-    CAST(b.charges_last_transaction_installments AS INT64) AS installments,
-    b.charges_payment_method AS payment_method,
-    b.charges_status AS status
-FROM `SCHEMA_ORIGINAL.PAGARME_ORDERS` a
-JOIN `SCHEMA_ORIGINAL.PAGARME_ORDERS_CHARGES` b
-    ON a.id = b.order_id
+CAST(a.id AS STRING) AS id, 
+DATETIME(a.created_at, "America/Sao_Paulo") AS created_at_brasilia, -- Converter fuso horário para -3
+a.customer_name,
+a.customer_email,
+ROUND(b.charges_amount, 2) AS charges_amount, -- Limitar a 2 casas decimais
+CASE
+    WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card' 
+    THEN CAST(0.90 AS FLOAT64)  -- desconto de R$0,90
+    WHEN b.charges_status = 'failed' AND b.charges_payment_method = 'credit_card'
+    THEN CAST(0.30 AS FLOAT64)  -- desconto de R$0,30 aplicado porque existem transações com desconto de 0.50 centavos devido ao antifraude e transações com valor 0.00
+    ELSE 0 -- caso não se encaixe em nenhuma condição
+END AS cost,
+CASE
+    WHEN b.charges_payment_method = 'credit_card' AND b.charges_status = 'paid' 
+    THEN ROUND(b.charges_amount * f.percentage, 2)
+    WHEN b.charges_payment_method = 'pix' AND b.charges_status = 'paid'
+    THEN CAST (ROUND(b.charges_amount * 0.0092, 2) AS FLOAT64)
+    ELSE 0
+
+END AS processing_fee,
+
+CASE
+    WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card'
+    THEN ROUND(b.charges_amount - (b.charges_amount * f.percentage + 0.90), 2)
+    WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'pix'
+    THEN ROUND(b.charges_amount - b.charges_amount * 0.0092, 2)
+    ELSE 0
+END AS net_amount,
+
+
+CAST(b.charges_last_transaction_installments AS INT64) AS installments,
+b.charges_payment_method AS payment_method,
+b.charges_status AS status
+
+
+FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders` a -- Pagarme 2.0 Yampi 
+
+JOIN `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders_charges` b -- Pagarme 2.0 Yampi 
+
+ON a.id = b.order_id
+
 JOIN fee f
-    ON f.installments = b.charges_last_transaction_installments
+
+ON f.installments = b.charges_last_transaction_installments
+
 
 UNION ALL
 
 SELECT
-    CAST(id AS STRING) AS id,
-    DATETIME(date_created, "America/Sao_Paulo") AS date_created_brasilia,
-    customer_name,
-    customer_email,
-    (paid_amount/100) AS amount,
-    CAST(cost / 100 AS FLOAT64) AS cost,
-    CASE
-        WHEN payment_method = 'credit_card' AND status = 'paid' 
-            THEN ROUND(paid_amount * f.percentage, 2)
-        WHEN payment_method = 'pix' AND status = 'paid'
-            THEN CAST(ROUND(paid_amount * 0.0092, 2) AS FLOAT64)
-        ELSE 0
-    END AS processing_fee,
-    CASE
-        WHEN status = 'paid' AND payment_method = 'credit_card'
-            THEN ROUND(paid_amount - (paid_amount * f.percentage + 0.90), 2)
-        WHEN status = 'paid' AND payment_method = 'pix'
-            THEN ROUND(paid_amount - paid_amount * 0.0092, 2)
-        ELSE 0
-    END AS net_amount,
-    c.installments,
-    payment_method,
-    status
-FROM `SCHEMA_ORIGINAL.PAGARME_CUSTOMERS_LEGACY` c
+CAST(id AS STRING) AS id, -- Converter o id para uma string
+DATETIME(date_created, "America/Sao_Paulo") AS date_created_brasilia, -- Converter fuso horário para -3   OK
+customer_name,
+customer_email,
+(paid_amount/100) AS amount, -- Dividir por 100
+CAST(cost / 100 AS FLOAT64) AS cost,
+CASE
+    WHEN payment_method = 'credit_card' AND status = 'paid' 
+    THEN ROUND((paid_amount / 100) * f.percentage, 2)
+    WHEN payment_method = 'pix' AND status = 'paid'
+    THEN CAST (ROUND((paid_amount / 100) * 0.0092, 2) AS FLOAT64)
+    ELSE 0
+
+END AS processing_fee,
+
+CASE
+    WHEN payment_method = 'credit_card' AND status = 'paid' 
+    THEN ROUND((paid_amount - (paid_amount  * f.percentage + 0.90)) / 100, 2)
+    WHEN status = 'paid' AND payment_method = 'pix'
+    THEN ROUND((paid_amount - paid_amount * 0.0092) /100, 2)
+    ELSE 0
+END AS net_amount,
+
+c.installments,
+payment_method,
+status
+FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_customers_legacy`  c -- Pagarme Legacy Yampi 
+
 JOIN fee f
-    ON f.installments = c.installments;
+
+ON f.installments = c.installments 
+
+
+WHERE status = 'paid' AND payment_method = 'credit_card'
