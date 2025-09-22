@@ -1,7 +1,7 @@
 -- ===========================================
 -- Título: Juntar dados da V1 e V5 da Pagarme 
 -- Autor: Renan Serra
--- Descrição: Query para calcular juntar dados das diferentes versões da API da Pagarme trazendo os dados 
+-- Descrição: Query para calcular juntar dados das diferentes versões da API da Pagarme
 -- Nota: Nomes de banco e tabelas foram anonimizados para segurança
 -- Plataforma: BigQuery
 -- Data: 22/09/2025
