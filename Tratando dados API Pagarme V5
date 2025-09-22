@@ -1,0 +1,76 @@
+-- ===========================================
+-- Título: Obter faturamento e calculo de taxas Pagarme V5
+-- Autor: Renan Serra
+-- Descrição: Query para calcular taxas de cartão e Pix, custo fixo e valor líquido por pedido
+-- Nota: Nomes de banco e tabelas foram anonimizados para segurança
+-- Plataforma: BigQuery
+-- Data: 22/09/2025
+-- ===========================================
+
+-- CTE com taxas de parcelas do cartão de crédito
+WITH fee AS (
+    SELECT 1 AS installments, 0.0312 AS percentage UNION ALL
+    SELECT 2, 0.0554 UNION ALL -- Insira as taxas de parcelamento da sua Pagarme aqui
+    SELECT 3, 0.0670 UNION ALL
+    SELECT 4, 0.0786 UNION ALL
+    SELECT 5, 0.0902 UNION ALL
+    SELECT 6, 0.1018 UNION ALL
+    SELECT 7, 0.1152 UNION ALL
+    SELECT 8, 0.1268 UNION ALL
+    SELECT 9, 0.1384 UNION ALL
+    SELECT 10, 0.1500 UNION ALL
+    SELECT 11, 0.1616 UNION ALL
+    SELECT 12, 0.1732
+) 
+
+SELECT 
+    -- Identificação do pedido
+    CAST(a.id AS STRING) AS id,
+    DATETIME(a.created_at, "America/Sao_Paulo") AS created_at_brasilia,
+    
+    -- Dados do cliente
+    a.customer_name,
+    a.customer_email,
+    
+    -- Valor bruto da cobrança
+    ROUND(b.charges_amount, 2) AS charges_amount,
+    
+    -- Custo fixo aplicado por tipo de transação
+    CASE
+        WHEN b.charges_status = 'paid' AND b.charges_payment_method = 'credit_card' THEN 0.90
+        WHEN b.charges_status = 'failed' AND b.charges_payment_method = 'credit_card' THEN 0.30
+        ELSE 0
+    END AS cost,
+    
+    -- Taxa de processamento
+    CASE
+        WHEN b.charges_payment_method = 'credit_card' AND b.charges_status = 'paid' THEN ROUND(b.charges_amount * f.percentage, 2)
+        WHEN b.charges_payment_method = 'pix' AND b.charges_status = 'paid' THEN ROUND(b.charges_amount * 0.0092, 2)
+        ELSE 0
+    END AS processing_fee,
+    
+    -- Valor líquido após taxas e custo
+    ROUND(
+        b.charges_amount - 
+        (
+            CASE
+                WHEN b.charges_payment_method = 'credit_card' AND b.charges_status = 'paid' THEN ROUND(b.charges_amount * f.percentage, 2) + 0.90
+                WHEN b.charges_payment_method = 'pix' AND b.charges_status = 'paid' THEN ROUND(b.charges_amount * 0.0092, 2) -- Insira a sua taxa de PIX aqui
+                ELSE 0
+            END
+        ), 
+    2) AS net_amount,
+    
+    -- Parcelas e informações de pagamento
+    CAST(b.charges_last_transaction_installments AS INT64) AS installments,
+    b.charges_payment_method AS payment_method,
+    b.charges_status AS status
+
+FROM 
+    `my_dataset.orders` a
+JOIN 
+    `my_dataset.orders_charges` b
+    ON a.id = b.order_id
+JOIN 
+    fee f
+    ON f.installments = b.charges_last_transaction_installments
