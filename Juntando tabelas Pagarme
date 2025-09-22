@@ -109,6 +109,3 @@ FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_customers_leg
 JOIN fee f
 
 ON f.installments = c.installments 
-
-
-WHERE status = 'paid' AND payment_method = 'credit_card'
