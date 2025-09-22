@@ -7,9 +7,9 @@
 -- Data: 22/09/2025
 -- ===========================================
 
--- CREATE SCHEMA IF NOT EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi`;
--- DROP TABLE IF EXISTS `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi`;
--- CREATE TABLE `banco-de-dados-proper-tratado.financeiroproperjackyampi.pagarme_yampi` AS
+-- CREATE SCHEMA IF NOT EXISTS `meu_schema`;
+-- DROP TABLE IF EXISTS `minha_tabela`;
+-- CREATE TABLE `minha_tabela` AS
 
 WITH fee AS 
 
@@ -64,9 +64,9 @@ b.charges_payment_method AS payment_method,
 b.charges_status AS status
 
 
-FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders` a -- Pagarme 2.0 Yampi 
+FROM `minha_tabela_pagarme_orders` a -- Pagarme 2.0
 
-JOIN `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_orders_charges` b -- Pagarme 2.0 Yampi 
+JOIN `minha_tabela_pagarme_orders_charges` b -- Pagarme 2.0
 
 ON a.id = b.order_id
 
@@ -104,7 +104,7 @@ END AS net_amount,
 c.installments,
 payment_method,
 status
-FROM `banco-de-dados-proper-jack.financeiroproperjackyampi.pagarme_customers_legacy`  c -- Pagarme Legacy Yampi 
+FROM `minha_tabela_pagarme_customers_legacy`  c -- Pagarme Legacy
 
 JOIN fee f
 
