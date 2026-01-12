@@ -1,6 +1,6 @@
 <h2>Portfólio de SQL – Renan Serra </h2>
 
-Este repositório contém projetos de SQL avançado em BigQuery, focados em análise de dados de transações financeiras e cálculo de taxas em diferentes versões da API da Pagarme.
+Este repositório contém projetos de SQL utilizando o BigQuery, focados em análise de dados de transações financeiras e cálculo de taxas em diferentes versões da API da Pagarme.
 
 O que você irá encontrar:
 
