@@ -1,4 +1,4 @@
-MERGE INTO `SELECT_YOUR_TABLE_TO_BE_UPDATED` T
+MERGE INTO `SET_YOUR_TABLE_TO_BE_UPDATED` T
 USING (
   SELECT 
     a.name AS order_number_shopify, 
@@ -20,7 +20,7 @@ USING (
   WHERE 
     CAST(a.name AS INT64) > (
       SELECT MAX(CAST(order_number_shopify AS INT64))
-      FROM `SELECT_YOUR_TABLE_TO_BE_UPDATED`
+      FROM `SET_YOUR_TABLE_TO_BE_UPDATED`
     ) -- Conversão do ID para INT64 por ter o formato como STRING possa se tornar um número e permitir a atualização de valores acima do ID de maior número
      AND DATE(a.created_at) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) AND CURRENT_DATE()
 ) S -- Puxa até 365 dias
