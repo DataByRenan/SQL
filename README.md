@@ -1,11 +1,12 @@
-<h2>Portfólio de SQL – Renan Serra </h2>
+## Portfólio de SQL – Renan Serra
 
-Este repositório contém projetos de SQL utilizando o BigQuery, focados em análise de dados de transações financeiras e cálculo de taxas em diferentes versões da API da Pagarme.
+Este repositório reúne projetos de SQL desenvolvidos no BigQuery, com foco
+em análise de dados, integração de diferentes fontes e aplicação de regras
+de negócio em cenários reais.
 
-O que você irá encontrar:
-
-- Consolidação de tabelas e versões diferentes de APIs (V1 e V5);
-- Cálculo de taxas e valores líquidos: aplicação de regras de negócio para cartões de crédito, PIX e custos fixos;
-- Tratamento de dados reais: ajuste de fuso horário, conversão de tipos, arredondamento de valores e tratamento de casos especiais;
-- SQL avançado: uso de CTEs, joins, CASE statements, agregações e casts;
-- Documentação e organização: cada script contém comentários detalhados, títulos, descrições e notas de segurança.
+### O que você encontrará aqui:
+- Consultas avançadas utilizando CTEs e Subqueries
+- Integração e tratamento de dados da Shopify
+- Processamento de transações financeiras (Pagarme API V5)
+- Análises e consolidações de dados logísticos (FM Transportes)
+- Tratamento e análise de dados de campanhas do Facebook
